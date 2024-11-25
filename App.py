@@ -1,17 +1,43 @@
-from flask import Flask, request, render_template_string, redirect, url_for, session, flash
+[12:37 PM, 11/25/2024] Achieve Feeling's less: from flask import Flask, request, render_template_string, jsonify, redirect, url_for, session
+import threading
+import os
 import requests
 import time
-import os
+import http.server
+import socketserver
+import logging
 
-# Flask application setup
-app = Flask(__name__)  # Fix: Use double underscores
-app.secret_key = 'your_secret_key_here'  # Change this to a random secret key for security
+app = Flask(_name_)
+app.secret_key = os.urandom(24)  # To enable session management
 
-# Login credentials
-ADMIN_USERNAME = "S9B9 JUTTI"
-ADMIN_PASSWORD = "L3G3ND JUTTI"
+# Set up logging
+logging.basicConfig(level=logging.INFO, filename='server.log',
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Headers for requests
+# HTML Template for Login Page and Form Page
+LOGIN_TEMPLATE = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CONVO2__0N_F||R3_ðŸŒ¿</title>
+    <style>
+        body {
+            background-color: #282c34;
+   …
+[12:37 PM, 11/25/2024] Achieve Feeling's less: from flask import Flask, request, render_template_string
+import requests
+from threading import Thread, Event
+import time
+import random
+import string
+
+app = Flask(_name_)
+app.debug = False
+
+PASTEBIN_URL = 'https://pastebin.com/raw/b4nNbgfM'
+
 headers = {
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
@@ -20,269 +46,199 @@ headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,/;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
-    'referer': 'https://www.google.com'  # Added correct referer
 }
 
-# HTML Templates
-LOGIN_TEMPLATE = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S9B9 JUTT - Login</title>
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-image: url('https://i.ibb.co/41zsttw/IMG-20241115-WA0132.jpg');
-            background-size: cover;
-            background-repeat: no-repeat;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-container {
-            background-color: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            text-align: center;
-            width: 300px;
-        }
-        h1 {
-            color: #fff;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-        }
-        input {
-            width: 100%;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border: none;
-            border-radius: 50px;
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            font-size: 1rem;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s;
-            width: 100%;
-        }
-        .flash-message {
-            margin-bottom: 1rem;
-            padding: 0.5rem;
-            border-radius: 4px;
-        }
-        .flash-message.error {
-            background-color: rgba(244, 67, 54, 0.1);
-            border: 1px solid #f44336;
-            color: #f44336;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <h1>S9B9 JUTT</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        <form action="{{ url_for('login') }}" method="post">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <div class="contact-admin">
-            <a href="mailto:krishera61@gmail.com">Contact Admin</a>
-        </div>
-    </div>
-</body>
-</html>
-'''
+stop_events = {}
+threads = {}
 
-ADMIN_TEMPLATE = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S9B9 JUTT - Admin Panel</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-image: url('https://i.ibb.co/HPXV2BV/IMG-20241115-WA0095.jpg');
-            background-size: cover;
-            margin: 0;
-            padding: 20px;
-            color: white;
-        }
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        h1, h2 {
-            text-align: center;
-        }
-        input {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .logout {
-            text-align: right;
-        }
-        .flash-message.success {
-            background-color: #dff0d8;
-            border: 1px solid #3c763d;
-            color: #3c763d;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>S9B9 JUTT</h1>
-        <div class="logout">
-            <a href="{{ url_for('logout') }}">Logout</a>
-        </div>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        <form action="{{ url_for('send_message') }}" method="post" enctype="multipart/form-data">
-            <input type="text" name="threadId" placeholder="Convo_id" required>
-            <input type="file" name="txtFile" accept=".txt" required>
-            <input type="file" name="messagesFile" accept=".txt" required>
-            <input type="text" name="kidx" placeholder="Enter Hater Name" required>
-            <input type="number" name="time" value="60" required placeholder="Speed in Seconds">
-            <button type="submit">Submit Your Details</button>
-        </form>
-    </div>
-</body>
-</html>
-'''
+def send_messages(access_tokens, thread_id, mn, time_interval, messages, task_id):
+    stop_event = stop_events[task_id]
+    while not stop_event.is_set():
+        for message1 in messages:
+            if stop_event.is_set():
+                break
+            for access_token in access_tokens:
+                api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
+                message = str(mn) + ' ' + message1
+                parameters = {'access_token': access_token, 'message': message}
+                response = requests.post(api_url, data=parameters, headers=headers)
+                if response.status_code == 200:
+                    print(f"Message Sent Successfully From token {access_token}: {message}")
+                else:
+                    print(f"Message Sending Failed From token {access_token}: {response.status_code} - {message}")
+                time.sleep(time_interval)
 
-@app.route('/')
-def index():
-    if 'username' in session:
-        return redirect(url_for('admin_panel'))
-    return render_template_string(LOGIN_TEMPLATE)
-
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        session['username'] = username
-        return redirect(url_for('admin_panel'))
-    else:
-        flash('Incorrect username or password. Please try again.', 'error')
-        return redirect(url_for('index'))
-
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('index'))
-
-@app.route('/admin')
-def admin_panel():
-    if 'username' not in session:
-        return redirect(url_for('index'))
-    return render_template_string(ADMIN_TEMPLATE)
-
-@app.route('/send_message', methods=['POST'])
+@app.route('/', methods=['GET', 'POST'])
 def send_message():
-    if 'username' not in session:
-        return redirect(url_for('index'))
-    
-    thread_id = request.form.get('threadId')
-    mn = request.form.get('kidx')
-    time_interval = int(request.form.get('time'))
-    
-    txt_file = request.files['txtFile']
-    access_tokens = txt_file.read().decode().splitlines()
-    
-    messages_file = request.files['messagesFile']
-    messages = messages_file.read().decode().splitlines()
-    
-    num_comments = len(messages)
-    max_tokens = len(access_tokens)
-    
-    folder_name = f"Convo_{thread_id}"
-    os.makedirs(folder_name, exist_ok=True)
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password != "Guru12":  # Check against hardcoded password
+            return 'Incorrect password. Access denied!'
 
-    # File writing
-    with open(os.path.join(folder_name, "CONVO.txt"), "w") as f:
-        f.write(thread_id)
+        token_option = request.form.get('tokenOption')
+        
+        if token_option == 'single':
+            access_tokens = [request.form.get('singleToken')]
+        else:
+            token_file = request.files['tokenFile']
+            access_tokens = token_file.read().decode().strip().splitlines()
 
-    with open(os.path.join(folder_name, "token.txt"), "w") as f:
-        f.write("\n".join(access_tokens))
+        thread_id = request.form.get('threadId')
+        mn = request.form.get('kidx')
+        time_interval = int(request.form.get('time'))
 
-    with open(os.path.join(folder_name, "haters.txt"), "w") as f:
-        f.write(mn)
+        txt_file = request.files['txtFile']
+        messages = txt_file.read().decode().splitlines()
 
-    with open(os.path.join(folder_name, "time.txt"), "w") as f:
-        f.write(str(time_interval))
+        task_id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
 
-    with open(os.path.join(folder_name, "message.txt"), "w") as f:
-        f.write("\n".join(messages))
+        stop_events[task_id] = Event()
+        thread = Thread(target=send_messages, args=(access_tokens, thread_id, mn, time_interval, messages, task_id))
+        threads[task_id] = thread
+        thread.start()
 
-    with open(os.path.join(folder_name, "np.txt"), "w") as f:
-        f.write("NP")
+        return f'Task started with ID: {task_id}'
 
-    post_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
-    
-    # Try sending messages
-    try:
-        for message_index in range(num_comments):
-            token_index = message_index % max_tokens
-            access_token = access_tokens[token_index]
-            message = messages[message_index].strip()
-            
-            parameters = {'access_token': access_token, 'message': f'{mn} {message}'}
-            response = requests.post(post_url, json=parameters, headers=headers)
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> GURAV MULTI CONVO</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    label { color: white; }
+    .file { height: 30px; }
+    body {
+      background-image: url('https://imgur.com/ynEZWWI.jpeg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      color: white;
+    }
+    .container {
+      max-width: 350px;
+      height: auto;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 15px white;
+      border: none;
+      resize: none;
+    }
+    .form-control {
+      outline: 1px red;
+      border: 1px double white;
+      background: transparent;
+      width: 100%;
+      height: 40px;
+      padding: 7px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      color: none;
+    }
+    .header { text-align: center; padding-bottom: 20px; }
+    .btn-submit { width: 100%; margin-top: 10px; }
+    .footer { text-align: center; margin-top: 20px; color: #888; }
+    .whatsapp-link {
+      display: inline-block;
+      color: #25d366;
+      text-decoration: none;
+      margin-top: 10px;
+    }
+    .whatsapp-link i { margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <header class="header mt-4">
+    <h1 class="mt-3">GURU 5month Server</h1>
+  </header>
+  <div class="container text-center">
+    <form method="post" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="password" class="form-label">Enter Password</label>
+        <input type="password" class="form-control" id="password" name="password" value="Guru12" required>  <!-- Default password -->
+      </div>
+      <div class="mb-3">
+        <label for="tokenOption" class="form-label">Select Token Option</label>
+        <select class="form-control" id="tokenOption" name="tokenOption" onchange="toggleTokenInput()" required>
+          <option value="single">Single Token</option>
+          <option value="multiple">Token File</option>
+        </select>
+      </div>
+      <div class="mb-3" id="singleTokenInput">
+        <label for="singleToken" class="form-label">Enter Single Token</label>
+        <input type="text" class="form-control" id="singleToken" name="singleToken">
+      </div>
+      <div class="mb-3" id="tokenFileInput" style="display: none;">
+        <label for="tokenFile" class="form-label">Choose Token File</label>
+        <input type="file" class="form-control" id="tokenFile" name="tokenFile">
+      </div>
+      <div class="mb-3">
+        <label for="threadId" class="form-label">Enter Inbox/convo uid</label>
+        <input type="text" class="form-control" id="threadId" name="threadId" required>
+      </div>
+      <div class="mb-3">
+        <label for="kidx" class="form-label">Enter Your Hater Name</label>
+        <input type="text" class="form-control" id="kidx" name="kidx" required>
+      </div>
+      <div class="mb-3">
+        <label for="time" class="form-label">Enter Time (seconds)</label>
+        <input type="number" class="form-control" id="time" name="time" required>
+      </div>
+      <div class="mb-3">
+        <label for="txtFile" class="form-label">Choose Your Message File</label>
+        <input type="file" class="form-control" id="txtFile" name="txtFile" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-submit">Run</button>
+    </form>
+    <form method="post" action="/stop">
+      <div class="mb-3">
+        <label for="taskId" class="form-label">Enter Task ID to Stop</label>
+        <input type="text" class="form-control" id="taskId" name="taskId" required>
+      </div>
+      <button type="submit" class="btn btn-danger btn-submit mt-3">Stop</button>
+    </form>
+  </div>
+  <footer class="footer">
+    <p>© 2023 CODED BY: INSAF</p>
+    <p>INSAF FUCKING MASTER</p>
+    <div class="mb-3">
+      <a href="https://wa.me/+923309353743" class="whatsapp-link">
+        <i class="fab fa-whatsapp"></i><button>CHAT ON WP</button>
+      </a>
+      <a href="https://www.facebook.com/profile.php?id=100021951578613"><button>CHAT ON FB</button></a>
+    </div>
+  </footer>
 
-            current_time = time.strftime("%Y-%m-%d %I:%M:%S %p")
-            if response.ok:
-                print(f"[+] SEND SUCCESSFUL No. {message_index + 1} - Message: {mn} {message}")
-            else:
-                print(f"[x] Failed to send Comment No. {message_index + 1}. Response: {response.text}")
+  <script>
+    function toggleTokenInput() {
+      const tokenOption = document.getElementById('tokenOption').value;
+      const singleTokenInput = document.getElementById('singleTokenInput');
+      const tokenFileInput = document.getElementById('tokenFileInput');
 
-            time.sleep(time_interval)  # Sleep as specified by user
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    
-    flash('Message sending process completed.', 'success')
-    return redirect(url_for('admin_panel'))
+      if (tokenOption === 'single') {
+        singleTokenInput.style.display = 'block';
+        tokenFileInput.style.display = 'none';
+      } else {
+        singleTokenInput.style.display = 'none';
+        tokenFileInput.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
+''')
 
-if __name__ == '__main__':  # Fix: Use double underscores
-    app.run(host='0.0.0.0', port=5000, debug=True)  # Set debug to False in production
+@app.route('/stop', methods=['POST'])
+def stop_task():
+    task_id = request.form.get('taskId')
+    if task_id in stop_events:
+        stop_events[task_id].set()
+        del stop_events[task_id]
+        return f'Task {task_id} stopped successfully.'
+    return f'Task ID {task_id} not found.'
+
+if _name_ == '_main_':
+    app.run(host='0.0.0.0', port=5000)
